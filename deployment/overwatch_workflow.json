@@ -1,0 +1,402 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "metadata": {
+        "title": "WA SOC Overwatch Alerts to Microsoft Sentinel",
+        "description": "This playbook listens for HTTP requests from WA SOC Overwatch alerts and ingests them to Log Analytics (MS Sentinel) .",
+        "lastUpdateTime": "2022-04-22T00:00:00.000Z",
+        "support": {
+            "tier": "WA SOC Customers - SLA 1+"
+        },
+        "author": {
+            "name": "Joshua Hitchen"
+        }
+    },
+    "parameters": {
+        "location":{
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]"
+        },
+        "Playbook_Name": {
+            "defaultValue": "WASOCOverwatchWorkflow",
+            "type": "string"
+        },
+        "Log_Analytics_Connection_Name": {
+            "type": "string",
+            "defaultValue": "WASOCOverwatchConnection"
+        },
+        "Log_Analytics_Workspace_ID": {
+            "type": "string",
+            "defaultValue":"ID",
+            "metadata": {
+             "description": "The unique identifier of the Azure Log Analytics workspace."
+            }
+        },
+        "Log_Analytics_Workspace_Key": {
+            "type": "securestring",
+            "defaultValue":"key",
+            "metadata": {
+                "description": "The primary or secondary key of the Azure Log Analytics workspace."
+            }
+        },
+        "Authentication_Key": {
+            "type": "securestring",
+            "defaultValue":"key",
+            "metadata": {
+                "description": "The WA SOC Event Grid Key - Prevent Unauthorised data being ingested"
+            }
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "MICROSOFT.WEB/CONNECTIONS",
+            "apiVersion": "2018-07-01-preview",
+            "name": "[parameters('Log_Analytics_Connection_Name')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "api": {
+                    "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', parameters('location'), '/managedApis/', 'azureloganalyticsdatacollector')]"
+                },
+                "displayName": "[parameters('Log_Analytics_Connection_Name')]",
+                "parameterValues": {
+                    "username": "[parameters('Log_Analytics_Workspace_ID')]",
+                    "password": "[parameters('Log_Analytics_Workspace_Key')]"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('Playbook_Name')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "LogicAppsCategory": "security"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/connections', parameters('Log_Analytics_Connection_Name'))]"
+            ],
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        },
+                        "Secret Key": {
+                            "defaultValue": "[parameters('Authentication_Key')]",
+                            "type": "String"
+                        }
+                    },
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "schema": {
+                                    "properties": {
+                                        "AlertID": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "AlertTrigger": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "Country": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "Data": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "HostNames": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "IPAddress": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "Module": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "OverwatchID": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "Org": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "Port": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "Timestamp": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "Transport": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "description": "The webhook address that the WA SOC utilises to send WASOCMontior Alerts to your tenant."
+                        }
+                    },
+                    "actions": {
+                        "Authenticating_Dataflow": {
+                            "actions": {
+                                "Ingest_to_WA_SOC_Customers_Sentinel": {
+                                    "runAfter": {
+                                        "Parse_WASOC_Overwatch_Information": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "body": "@{body('Parse_WASOC_Overwatch_Information')[0]['data']}",
+                                        "headers": {
+                                            "Log-Type": "WASOCOverwatchv1"
+                                        },
+                                        "host": {
+                                            "connection": {
+                                                "name": "@parameters('$connections')['azureloganalyticsdatacollector']['connectionId']"
+                                            }
+                                        },
+                                        "method": "post",
+                                        "path": "/api/logs"
+                                    }
+                                },
+                                "Parse_WASOC_Overwatch_Information": {
+                                    "runAfter": {},
+                                    "type": "ParseJson",
+                                    "inputs": {
+                                        "content": "@triggerBody()",
+                                        "schema": {
+                                            "items": {
+                                                "properties": {
+                                                    "data": {
+                                                        "properties": {
+                                                            "AlertID": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "AlertTrigger": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "Country": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "Data": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "HostNames": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "IPAddress": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "Module": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "OverwatchID": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "Org": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "Port": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "Timestamp": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "Transport": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "dataVersion": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "eventTime": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "eventType": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "id": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "metadataVersion": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "subject": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "topic": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "data",
+                                                    "eventType",
+                                                    "id",
+                                                    "subject",
+                                                    "dataVersion",
+                                                    "metadataVersion",
+                                                    "eventTime",
+                                                    "topic"
+                                                ],
+                                                "type": "object"
+                                            },
+                                            "type": "array"
+                                        }
+                                    }
+                                },
+                                "Response_200_(OK)": {
+                                    "runAfter": {
+                                        "Ingest_to_WA_SOC_Customers_Sentinel": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "Response",
+                                    "kind": "Http",
+                                    "inputs": {
+                                        "statusCode": 200
+                                    }
+                                }
+                            },
+                            "runAfter": {},
+                            "else": {
+                                "actions": {
+                                    "Response_403_(Forbidden)": {
+                                        "runAfter": {},
+                                        "type": "Response",
+                                        "kind": "Http",
+                                        "inputs": {
+                                            "statusCode": 403
+                                        }
+                                    }
+                                }
+                            },
+                            "expression": {
+                                "and": [
+                                    {
+                                        "equals": [
+                                            "@triggerOutputs()['headers']['key']",
+                                            "@parameters('Secret Key')"
+                                        ]
+                                    }
+                                ]
+                            },
+                            "type": "If"
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "azureloganalyticsdatacollector": {
+                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('Log_Analytics_Connection_Name'))]",
+                                "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', parameters('location'), '/managedApis/', 'azureloganalyticsdatacollector')]"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}

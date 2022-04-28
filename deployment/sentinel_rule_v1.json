@@ -1,0 +1,80 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "string"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/dcc05612-2dad-4f1e-8ca5-103c9ed29fb3')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/dcc05612-2dad-4f1e-8ca5-103c9ed29fb3')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2021-10-01-preview",
+            "properties": {
+                "displayName": "WASOC Overwatch Detection",
+                "description": "###  RULE DESCRIPTION  ###\nThis rules is designed to alert SOC Operators of a potential issue with your external facing (internet) facing assets.",
+                "severity": "Informational",
+                "enabled": true,
+                "query": "WASOCOverwatchv1_CL\n\n",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "Discovery"
+                ],
+                "techniques": [
+                    "T0840"
+                ],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "AlertPerResult"
+                },
+                "alertDetailsOverride": {
+                    "alertDisplayNameFormat": "WASOC Overwatch detected a {{AlertTrigger_s}}",
+                    "alertDescriptionFormat": "Alert from WASOC Overwatch based upon a {{AlertTrigger_s}} trigger.\n\nIP Detected:  {{IPAddress}}\n\nPorts Detected: {{Port_s}}",
+                    "alertTacticsColumnName": null,
+                    "alertSeverityColumnName": null
+                },
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "IPAddress"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Host",
+                        "fieldMappings": [
+                            {
+                                "identifier": "HostName",
+                                "columnName": "HostNames_s"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

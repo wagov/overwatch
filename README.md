@@ -50,7 +50,7 @@ Once your onboarding application form has been approved and finalised. Proceed w
 
     Click on the following **Deploy to Azure** buttom to deploy the cusom template.
 
-    [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](/deployment/overwatch_workflow.json)
+    [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fwagov%2Foverwatch%2Fmain%2Fdeployment%2Foverwatch_workflow.json)
 
     > Manual Deployment 
 

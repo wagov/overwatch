@@ -48,7 +48,7 @@
                     "aggregationKind": "AlertPerResult"
                 },
                 "alertDetailsOverride": {
-                    "alertDisplayNameFormat": "WASOC Overwatch detected a {{AlertTrigger_s}}",
+                    "alertDisplayNameFormat": "WASOC Overwatch detected a {{AlertTrigger_s}} service",
                     "alertDescriptionFormat": "Alert from WASOC Overwatch based upon a {{AlertTrigger_s}} trigger.\n\nIP Detected:  {{IPAddress}}\n\nPorts Detected: {{Port_s}}",
                     "alertTacticsColumnName": null,
                     "alertSeverityColumnName": null

@@ -1,6 +1,6 @@
 # WA SOC Overwatch - BETA - 
 
-**WA SOC Overwatch** is a live external monitor tool utilised by the WA SOC Threat Intelligence Team to track for changes of WA SOC Customer Internet facing assets. The goal of this service is to detect for high risk and potential threats that are associated to the following **Overwatch Factors** and to share this threat intelligence to our customers:
+**WA SOC Overwatch** is a live external passive monitoring service based on [Shodan Monitor](https://monitor.shodan.io/) that the WA SOC Threat Intelligence Team uses to track for changes of key internet facing assets. The goal of this service is to detect for high risk and potential threats that are associated to the following **Overwatch Factors** and to share this threat intelligence to our customers:
 
 > Overwatch Factors
 - [x] verfied compromised or malware detected services
@@ -60,19 +60,19 @@ Once your onboarding application form has been approved and finalised. Proceed w
 
  | Parameters  | Description |
 | ------------- | ------------- |
-| **Resoruce Group** | Select a Resource Group to host the logic app  |
+| **Resource Group** | Select a Resource Group to host the logic app  |
 | **Location** | Select a Azure region to host the logic app  |
 | **Playbook Name** | The name of the Logic App Playbook -- _Default Name: WASOCOverwatchWorkflow_  |
-| **Log Analytic Connection Name** | The connection name of the permission field for connection the logic app to log analytics. -- _Default Name: WASOCOverwatchConnection_ |
-| **Log Analytic Workspace ID** | The workspace ID of the log analytic workspace connection. Further information found [here](https://github.com/wagov/azure-guides/blob/main/guides/log-analytic-ID-and-keys.md)  |
-| **Log Analytic Workspace Key** | The workspace key of the log analytic workspace connection. Further information found [here](https://github.com/wagov/azure-guides/blob/main/guides/log-analytic-ID-and-keys.md) |
+| **Log Analytics Connection Name** | The connection name of the permission field for connection the logic app to log analytics. -- _Default Name: WASOCOverwatchConnection_ |
+| **Log Analytics Workspace ID** | The workspace ID of the log analytic workspace connection. Further information found [here](https://github.com/wagov/azure-guides/blob/main/guides/log-analytic-ID-and-keys.md)  |
+| **Log Analytics Workspace Key** | The workspace key of the log analytic workspace connection. Further information found [here](https://github.com/wagov/azure-guides/blob/main/guides/log-analytic-ID-and-keys.md) |
 | **Authentication Key** | The authentication key to prevent unauthorised ingest from webhook endpoint. |
 
 3. Once the parameters has been filled, proceed to _**Review + Create**_ step for azure to verify the template, and once the verify is completed, then _**Create**_ the finalise the Logic App Workflow.
 
 ### Rules
 
-To detect the WA SOC Overwatch events to Microsoft Sentinel. Utilise the [Rule](/deployment/sentinel_rule_v1.json) template and follow the [guide](https://docs.microsoft.com/en-us/azure/sentinel/import-export-analytics-rules#import-rules) to import rules.
+To detect the WA SOC Overwatch events to Microsoft Sentinel. Deploy this [Rule template](/deployment/sentinel_rule_v1.json) using the [guide](https://docs.microsoft.com/en-us/azure/sentinel/import-export-analytics-rules#import-rules) to import rules.
 
 > **_NOTE:_** This step should be completed once a WA SOC Overwatch event has been initially ingested into the Log Analytics Workspace. Initial ingested data may take an hour or more to appear as a querable table.
 

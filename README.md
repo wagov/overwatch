@@ -74,7 +74,7 @@ Once your onboarding application form has been approved and finalised. Proceed w
 
 To detect the WA SOC Overwatch events to Microsoft Sentinel. Utilise the [Rule](/deployment/sentinel_rule_v1.json) template and follow the [guide](https://docs.microsoft.com/en-us/azure/sentinel/import-export-analytics-rules#import-rules) to import rules.
 
-> **_NOTE:_** This step should be completed once WA SOC Overwatch event has been initially ingested into the Log Analytics Workspace **only**.
+> **_NOTE:_** This step should be completed once a WA SOC Overwatch event has been initially ingested into the Log Analytics Workspace. Initial ingested data may take an hour or more to appear as a querable table.
 
 # Support
 
